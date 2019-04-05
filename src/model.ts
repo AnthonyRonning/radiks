@@ -7,12 +7,13 @@ import {
   encryptObject, decryptObject, userGroupKeys, requireUserSession,
 } from './helpers';
 import {
-  sendNewGaiaUrl, find, FindQuery, destroyModel,
+    sendNewGaiaUrl, find, FindQuery, destroyModel, checkPayReq,
 } from './api';
 import Streamer from './streamer';
 import { Schema, Attrs } from './types/index';
 
 const EVENT_NAME = 'MODEL_STREAM_EVENT';
+const INVOICE_NAME = 'INVOICE_STREAM_EVENT';
 
 interface FetchOptions {
   decrypt?: boolean
@@ -116,12 +117,25 @@ export default class Model {
         await this.sign();
         const encrypted = await this.encrypted();
         const gaiaURL = await this.saveFile(encrypted);
-        await sendNewGaiaUrl(gaiaURL);
-        resolve(this);
+        const response = await sendNewGaiaUrl(gaiaURL);
+        console.log("Model saved: " + response);
+        resolve(response);
       } catch (error) {
         reject(error);
       }
     });
+  }
+
+  async checkPayReqPaid(id) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const invoice = await checkPayReq(id);
+        console.log("Invoice info: " + invoice);
+        resolve(invoice);
+      } catch (error) {
+          reject(error);
+      }
+    })
   }
 
   encrypted() {
@@ -277,6 +291,39 @@ export default class Model {
       Streamer.removeListener(this.onStreamEvent);
     }
   }
+
+  // LN specific
+    static onInvoiceStreamEvent = (_this, [event]) => {
+        try {
+          console.log('event: ' + event);
+            const { data } = event;
+            const invoice = JSON.parse(data);
+            if (invoice) {
+                _this.emitter.emit(INVOICE_NAME, invoice);
+            }
+        } catch (error) {
+            console.error(error.message);
+        }
+    }
+
+    static addInvoiceStreamListener(id, callback: () => void) {
+        if (!this.emitter) {
+            this.emitter = new EventEmitter();
+        }
+        if (this.emitter.getListeners().length === 0) {
+            Streamer.addInvoiceListener(id, (args: any) => {
+                this.onInvoiceStreamEvent(this, args);
+            });
+        }
+        this.emitter.addListener(INVOICE_NAME, callback);
+    }
+
+    static removeInvoiceStreamListener(id, callback: () => void) {
+        this.emitter.removeListener(INVOICE_NAME, callback);
+        if (this.emitter.getListeners().length === 0) {
+            Streamer.removeInvoiceListener(id, this.onStreamEvent);
+        }
+    }
 
   async destroy(): Promise<boolean> {
     await this.sign();

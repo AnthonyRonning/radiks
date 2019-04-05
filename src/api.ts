@@ -18,7 +18,20 @@ export const sendNewGaiaUrl = async (gaiaURL: string): Promise<boolean> => {
   if (!success) {
     throw new Error(`Error when saving model: '${message}'`);
   }
-  return success;
+  return message;
+};
+
+export const checkPayReq = async (payReqId: string): Promise<string> => {
+    const { apiServer } = getConfig();
+    const url = `${apiServer}/radiks/models/ln/${payReqId}`;
+    // console.log(url, gaiaURL);
+    const response = await fetch(url, {
+        method: 'GET',
+        headers: new Headers({
+            'Content-Type': 'application/json',
+        }),
+    });
+    return await response.json();
 };
 
 export interface FindQuery {
