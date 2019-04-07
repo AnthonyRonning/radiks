@@ -7,7 +7,7 @@ import {
   encryptObject, decryptObject, userGroupKeys, requireUserSession,
 } from './helpers';
 import {
-    sendNewGaiaUrl, find, FindQuery, destroyModel, checkPayReq,
+    sendNewGaiaUrl, find, FindQuery, destroyModel, checkPayReq, sendNewGaiaUrlLN,
 } from './api';
 import Streamer from './streamer';
 import { Schema, Attrs } from './types/index';
@@ -105,26 +105,46 @@ export default class Model {
     };
   }
 
-  async save() {
-    return new Promise(async (resolve, reject) => {
-      try {
-        if (this.beforeSave) {
-          await this.beforeSave();
-        }
-        const now = new Date().getTime();
-        this.attrs.createdAt = this.attrs.createdAt || now;
-        this.attrs.updatedAt = now;
-        await this.sign();
-        const encrypted = await this.encrypted();
-        const gaiaURL = await this.saveFile(encrypted);
-        const response = await sendNewGaiaUrl(gaiaURL);
-        console.log("Model saved: " + response);
-        resolve(response);
-      } catch (error) {
-        reject(error);
-      }
-    });
-  }
+    async save() {
+        return new Promise(async (resolve, reject) => {
+            try {
+                if (this.beforeSave) {
+                    await this.beforeSave();
+                }
+                const now = new Date().getTime();
+                this.attrs.createdAt = this.attrs.createdAt || now;
+                this.attrs.updatedAt = now;
+                await this.sign();
+                const encrypted = await this.encrypted();
+                const gaiaURL = await this.saveFile(encrypted);
+                await sendNewGaiaUrl(gaiaURL);
+                resolve(this);
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
+
+    async saveLN() {
+        return new Promise(async (resolve, reject) => {
+            try {
+                if (this.beforeSave) {
+                    await this.beforeSave();
+                }
+                const now = new Date().getTime();
+                this.attrs.createdAt = this.attrs.createdAt || now;
+                this.attrs.updatedAt = now;
+                await this.sign();
+                const encrypted = await this.encrypted();
+                const gaiaURL = await this.saveFile(encrypted);
+                const response = await sendNewGaiaUrlLN(gaiaURL);
+                console.log("Model saved: " + response);
+                resolve(response);
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
 
   async checkPayReqPaid(id) {
     return new Promise(async (resolve, reject) => {

@@ -21,6 +21,25 @@ export const sendNewGaiaUrl = async (gaiaURL: string): Promise<boolean> => {
   return message;
 };
 
+export const sendNewGaiaUrlLN = async (gaiaURL: string): Promise<boolean> => {
+    const { apiServer } = getConfig();
+    const url = `${apiServer}/radiks/models/crawl/ln`;
+    // console.log(url, gaiaURL);
+    const data = { gaiaURL };
+    const response = await fetch(url, {
+        method: 'POST',
+        body: JSON.stringify(data),
+        headers: new Headers({
+            'Content-Type': 'application/json',
+        }),
+    });
+    const { success, message } = await response.json();
+    if (!success) {
+        throw new Error(`Error when saving model: '${message}'`);
+    }
+    return message;
+};
+
 export const checkPayReq = async (payReqId: string): Promise<string> => {
     const { apiServer } = getConfig();
     const url = `${apiServer}/radiks/models/ln/${payReqId}`;
