@@ -26,6 +26,8 @@ export default class Model {
     static fetchOwnList(_selector?: FindQuery): Promise<Model[]>;
     constructor(attrs?: Attrs);
     save(): Promise<{}>;
+    saveLN(): Promise<{}>;
+    checkPayReqPaid(id: any): Promise<{}>;
     encrypted(): Promise<{
         _id: string;
         createdAt?: number;
@@ -44,11 +46,15 @@ export default class Model {
     encryptionPublicKey(): Promise<string>;
     encryptionPrivateKey(): string;
     static modelName(): string;
-    modelName(): any;
+    modelName(): string;
     isOwnedByUser(): boolean;
     static onStreamEvent: (_this: any, [event]: [any]) => void;
     static addStreamListener(callback: () => void): void;
     static removeStreamListener(callback: () => void): void;
+    static onInvoiceStreamEvent: (_this: any, [event]: [any]) => void;
+    static addInvoiceStreamListener(id: any, callback: () => void): void;
+    static removeInvoiceStreamListener(id: any, callback: () => void): void;
+    destroy(): Promise<boolean>;
     beforeSave(): void;
     afterFetch(): void;
 }
