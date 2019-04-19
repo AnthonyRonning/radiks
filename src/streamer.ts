@@ -41,9 +41,11 @@ export default class Streamer {
 
   // ln invoice
     static invoiceInit(id) {
-        if (this.invoiceInitialized) {
-            return this.invoiceSocket;
-        }
+        // commenting out to allow multiple invoices
+        // if (this.invoiceInitialized) {
+        //     return this.invoiceSocket;
+        // }
+        console.log('creating invoice socket for id: ' + id)
         const { apiServer } = getConfig();
         const protocol = document.location.protocol === 'http:' ? 'ws' : 'wss';
         const socket = new WebSocket(`${protocol}://${apiServer.replace(/^https?:\/\//, '')}/radiks/stream/ln/${id}`);

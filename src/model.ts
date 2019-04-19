@@ -28,6 +28,7 @@ export default class Model {
   public static defaults: any = {};
   public static className?: string;
   public static emitter?: EventEmitter;
+  public static invoiceEmitter?: EventEmitter;
   schema: Schema;
   _id: string;
   attrs: Attrs;
@@ -319,7 +320,7 @@ export default class Model {
             const { data } = event;
             const invoice = JSON.parse(data);
             if (invoice) {
-                _this.emitter.emit(INVOICE_NAME, invoice);
+                _this.invoiceEmitter.emit(invoice.id, invoice);
             }
         } catch (error) {
             console.error(error.message);
@@ -327,21 +328,21 @@ export default class Model {
     }
 
     static addInvoiceStreamListener(id, callback: () => void) {
-        if (!this.emitter) {
-            this.emitter = new EventEmitter();
+        if (!this.invoiceEmitter) {
+            this.invoiceEmitter = new EventEmitter();
         }
-        if (this.emitter.getListeners().length === 0) {
+        if (this.invoiceEmitter.getListeners().length === 0) {
             Streamer.addInvoiceListener(id, (args: any) => {
                 this.onInvoiceStreamEvent(this, args);
             });
         }
-        this.emitter.addListener(INVOICE_NAME, callback);
+        this.invoiceEmitter.addListener(id, callback);
     }
 
     static removeInvoiceStreamListener(id, callback: () => void) {
-        this.emitter.removeListener(INVOICE_NAME, callback);
-        if (this.emitter.getListeners().length === 0) {
-            Streamer.removeInvoiceListener(id, this.onStreamEvent);
+        this.invoiceEmitter.removeListener(id, callback);
+        if (this.invoiceEmitter.getListeners().length === 0) {
+            Streamer.removeInvoiceListener(id, this.onInvoiceStreamEvent);
         }
     }
 
